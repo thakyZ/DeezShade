@@ -2,7 +2,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net4.7.2</TargetFramework>
-        <Version>1.0.5</Version>
+        <Version>1.1.0</Version>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="PresentationFramework" />
@@ -10,5 +10,6 @@
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Lib.Harmony" Version="2.2.2" />
+      <PackageReference Include="SharpCompress" Version="0.32.2" />
     </ItemGroup>
 </Project>

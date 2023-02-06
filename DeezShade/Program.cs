@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Reflection;
 using HarmonyLib;
+using SharpCompress.Readers;
+using SharpCompress.Readers.Zip;
 
 namespace DeezShade {
     public class Program {
@@ -50,7 +53,6 @@ namespace DeezShade {
             }
 
             // I'm using the official GShade installer, am I not? :^
-            Console.WriteLine("Requesting new files through GShade installer...");
             var assembly = Assembly.LoadFile(exePath);
             var type = assembly.GetType("GShadeInstaller.App");
 
@@ -65,6 +67,7 @@ namespace DeezShade {
             var lolMethod = type.GetMethod("www", BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(lolMethod, new HarmonyMethod(typeof(Program).GetMethod(nameof(LolDetour))));
 
+            Console.WriteLine("Requesting new files through GShade installer...");
             type.GetMethod("CopyZipDeployProcess").Invoke(null, null);
             type.GetMethod("PresetDownloadProcess").Invoke(null, null);
             type.GetMethod("PresetInstallProcess").Invoke(null, null);
@@ -96,15 +99,51 @@ namespace DeezShade {
             RecursiveClone("");
             Directory.CreateDirectory(Path.Combine(gameInstall, "gshade-addons"));
 
-            Console.WriteLine("Extracting DLL and config...");
-            var zip = ZipFile.OpenRead(zipPath);
+            Console.Write("Use ReShade (y/n)? ");
+            var useReShade = Console.ReadLine().ToLower() == "y";
 
-            if (File.Exists(Path.Combine(gameInstall, "dxgi.dll"))) {
-                File.Move(Path.Combine(gameInstall, "dxgi.dll"), Path.Combine(gameInstall, "dxgi.dll.old"));
+            if (useReShade) {
+                Console.WriteLine("Downloading ReShade...");
+                var reshadeUrl = "http://static.reshade.me/downloads/ReShade_Setup_5.6.0_Addon.exe";
+                var reshadePath = tempPath + "ReShade_Setup_5.6.0_Addon.exe";
+                using (var client = new WebClient()) {
+                    client.DownloadFile(reshadeUrl, reshadePath);
+                }
+
+                Console.WriteLine("Installing ReShade...");
+                if (File.Exists(Path.Combine(gameInstall, "dxgi.dll"))) {
+                    File.Move(Path.Combine(gameInstall, "dxgi.dll"), Path.Combine(gameInstall, "dxgi.dll.old"));
+                }
+
+                var reshadeProcess = new Process();
+                reshadeProcess.StartInfo.FileName = reshadePath;
+                reshadeProcess.StartInfo.Arguments =
+                    $"\"{Path.Combine(gameInstall, "ffxiv_dx11.exe")}\" --api dxgi --headless";
+                reshadeProcess.Start();
+
+                var configPath = Path.Combine(gameInstall, "ReShade.ini");
+
+                if (!File.Exists(configPath)) {
+                    Console.WriteLine("Writing ReShade config...");
+                    var configText = @"[GENERAL]
+[GENERAL]
+EffectSearchPaths=.\gshade-shaders\Shaders\**
+TextureSearchPaths=.\gshade-shaders\Textures\**
+".Trim();
+
+                    File.WriteAllText(configPath, configText);
+                }
+            } else {
+                Console.WriteLine("Extracting DLL and config...");
+                var zip = ZipFile.OpenRead(zipPath);
+
+                if (File.Exists(Path.Combine(gameInstall, "dxgi.dll"))) {
+                    File.Move(Path.Combine(gameInstall, "dxgi.dll"), Path.Combine(gameInstall, "dxgi.dll.old"));
+                }
+
+                zip.GetEntry("GShade64.dll").ExtractToFile(Path.Combine(gameInstall, "dxgi.dll"), true);
+                zip.GetEntry("GShade.ini").ExtractToFile(Path.Combine(gameInstall, "GShade.ini"), true);
             }
-
-            zip.GetEntry("GShade64.dll").ExtractToFile(Path.Combine(gameInstall, "dxgi.dll"), true);
-            zip.GetEntry("GShade.ini").ExtractToFile(Path.Combine(gameInstall, "GShade.ini"), true);
 
             Console.WriteLine("Done!\nSupport FOSS, and thank you for using DeezShade!\nPress any key to continue.");
             Console.ReadKey();
