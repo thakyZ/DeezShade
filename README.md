@@ -1,5 +1,7 @@
 ﻿# DeezShade
 
+![license badge](https://img.shields.io/badge/license-%20MIT--except--for--GShade--Developers-green)
+
 Okay, now it's just funny. With love from NotNet and friends.
 
 DeezShade is a continuation of [GeezShade](https://git.n2.pm/NotNite/geezshade), in C#.
