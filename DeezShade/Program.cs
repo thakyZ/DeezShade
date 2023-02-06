@@ -3,11 +3,13 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Reflection;
+using HarmonyLib;
 
 namespace DeezShade {
     public class Program {
         public static void Main(string[] args) {
-            Console.WriteLine("DeezShade v1.0.2, by NotNet and friends");
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            Console.WriteLine($"DeezShade v{version}, by NotNet and friends");
             Console.WriteLine("Built for GShade v4.1.1.");
             
             Console.Write("Enter the path to your game install: ");
@@ -55,7 +57,13 @@ namespace DeezShade {
             // get presets & shaders
             type.GetField("_gsTempPath").SetValue(null, tempPath);
             type.GetField("_exeParentPath").SetValue(null, gameInstall);
+            
+            // Patch GShade from shutting off your computer (LMAO)
+            Console.WriteLine("Patching GShade malware...");
             type.GetField("_instReady").SetValue(null, true); // wp
+            var harmony = new Harmony("com.notnite.thanks-marot");
+            var lolMethod = type.GetMethod("lol", BindingFlags.Static | BindingFlags.NonPublic);
+            harmony.Patch(lolMethod, new HarmonyMethod(typeof(Program).GetMethod(nameof(LolDetour))));
             
             type.GetMethod("CopyZipDeployProcess").Invoke(null, null);
             type.GetMethod("PresetDownloadProcess").Invoke(null, null);
@@ -100,6 +108,11 @@ namespace DeezShade {
             
             Console.WriteLine("Done!\nSupport FOSS, and thank you for using DeezShade!\nPress any key to continue.");
             Console.ReadKey();
+        }
+
+        public static bool LolDetour() {
+            // thank you for writing malware marot
+            return false;
         }
     }
 }
