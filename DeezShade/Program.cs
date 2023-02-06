@@ -5,8 +5,6 @@ using System.IO.Compression;
 using System.Net;
 using System.Reflection;
 using HarmonyLib;
-using SharpCompress.Readers;
-using SharpCompress.Readers.Zip;
 
 namespace DeezShade {
     public class Program {
