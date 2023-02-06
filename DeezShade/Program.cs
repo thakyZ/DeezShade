@@ -62,7 +62,7 @@ namespace DeezShade {
             Console.WriteLine("Patching GShade malware...");
             type.GetField("_instReady").SetValue(null, true); // wp
             var harmony = new Harmony("com.notnite.thanks-marot");
-            var lolMethod = type.GetMethod("lol", BindingFlags.Static | BindingFlags.NonPublic);
+            var lolMethod = type.GetMethod("www", BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(lolMethod, new HarmonyMethod(typeof(Program).GetMethod(nameof(LolDetour))));
             
             type.GetMethod("CopyZipDeployProcess").Invoke(null, null);
