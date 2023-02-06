@@ -94,7 +94,7 @@ namespace DeezShade {
 
             Console.WriteLine("Moving shaders to game directory...");
             RecursiveClone("");
-            Directory.CreateDirectory(gameInstall + "gshade-addons");
+            Directory.CreateDirectory(Path.Combine(gameInstall, "gshade-addons"));
 
             Console.WriteLine("Extracting DLL and config...");
             var zip = ZipFile.OpenRead(zipPath);
