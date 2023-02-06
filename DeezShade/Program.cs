@@ -62,7 +62,7 @@ namespace DeezShade {
 
             // File.Copy gives an access denied error, so let's make it ourself
             var src = tempPath + "gshade-shaders";
-            var dst = gameInstall + "gshade-shaders";
+            var dst = Path.Combine(gameInstall, "gshade-shaders");
 
             void RecursiveClone(string path) {
                 var path2 = Path.Combine(src, path);
