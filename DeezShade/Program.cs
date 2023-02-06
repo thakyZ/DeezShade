@@ -7,7 +7,7 @@ using System.Reflection;
 namespace DeezShade {
     public class Program {
         public static void Main(string[] args) {
-            Console.WriteLine("DeezShade v1.0.0, by NotNet and friends");
+            Console.WriteLine("DeezShade v1.0.2, by NotNet and friends");
             Console.WriteLine("Built for GShade v4.1.1.");
             
             Console.Write("Enter the path to your game install: ");
@@ -55,7 +55,8 @@ namespace DeezShade {
             // get presets & shaders
             type.GetField("_gsTempPath").SetValue(null, tempPath);
             type.GetField("_exeParentPath").SetValue(null, gameInstall);
-
+            type.GetField("_instReady").SetValue(null, true); // wp
+            
             type.GetMethod("CopyZipDeployProcess").Invoke(null, null);
             type.GetMethod("PresetDownloadProcess").Invoke(null, null);
             type.GetMethod("PresetInstallProcess").Invoke(null, null);
