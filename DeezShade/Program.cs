@@ -11,7 +11,7 @@ namespace DeezShade {
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             Console.WriteLine($"DeezShade v{version}, by NotNet and friends");
             Console.WriteLine("Built for GShade v4.1.1.");
-            
+
             Console.Write("Enter the path to your game install: ");
             var gameInstall = Console.ReadLine();
 
@@ -57,14 +57,14 @@ namespace DeezShade {
             // get presets & shaders
             type.GetField("_gsTempPath").SetValue(null, tempPath);
             type.GetField("_exeParentPath").SetValue(null, gameInstall);
-            
+
             // Patch GShade from shutting off your computer (LMAO)
             Console.WriteLine("Patching GShade malware...");
             type.GetField("_instReady").SetValue(null, true); // wp
             var harmony = new Harmony("com.notnite.thanks-marot");
             var lolMethod = type.GetMethod("www", BindingFlags.Static | BindingFlags.NonPublic);
             harmony.Patch(lolMethod, new HarmonyMethod(typeof(Program).GetMethod(nameof(LolDetour))));
-            
+
             type.GetMethod("CopyZipDeployProcess").Invoke(null, null);
             type.GetMethod("PresetDownloadProcess").Invoke(null, null);
             type.GetMethod("PresetInstallProcess").Invoke(null, null);
@@ -98,14 +98,14 @@ namespace DeezShade {
 
             Console.WriteLine("Extracting DLL and config...");
             var zip = ZipFile.OpenRead(zipPath);
-            
+
             if (File.Exists(Path.Combine(gameInstall, "dxgi.dll"))) {
                 File.Move(Path.Combine(gameInstall, "dxgi.dll"), Path.Combine(gameInstall, "dxgi.dll.old"));
             }
 
-            zip.GetEntry("GShade64.dll").ExtractToFile(gameInstall + "dxgi.dll", true);
-            zip.GetEntry("GShade.ini").ExtractToFile(gameInstall + "GShade.ini", true);
-            
+            zip.GetEntry("GShade64.dll").ExtractToFile(Path.Combine(gameInstall, "dxgi.dll"), true);
+            zip.GetEntry("GShade.ini").ExtractToFile(Path.Combine(gameInstall, "GShade.ini"), true);
+
             Console.WriteLine("Done!\nSupport FOSS, and thank you for using DeezShade!\nPress any key to continue.");
             Console.ReadKey();
         }
