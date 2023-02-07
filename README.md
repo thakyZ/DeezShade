@@ -6,7 +6,11 @@ Okay, now it's just funny. With love from NotNet and friends.
 
 DeezShade is a continuation of [GeezShade](https://git.n2.pm/NotNite/geezshade), in C#.
 
-Note that this doesn't actually install vanilla ReShade (yet) - [do that yourself](https://reshade.me/) (but get the full addon build).
+Some notes:
+
+- If you have an existing GShade installation you want to move, you might like [this guide](https://gist.github.com/ry00001/3e2e63b986cb0c673645ea42ffafcc26).
+- GShade does not get patched for updates through this - you will need to [do that manually](https://notnite.com/gshade-patcher.html).
+
 
 [CLICK HERE TO INSTALL IT.](https://git.n2.pm/NotNite/DeezShade/releases/latest)
 
