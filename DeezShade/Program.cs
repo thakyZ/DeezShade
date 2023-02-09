@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using HarmonyLib;
@@ -13,8 +14,20 @@ namespace DeezShade {
             Console.WriteLine($"DeezShade v{version}, by NotNet and friends");
             Console.WriteLine("Built for GShade v4.1.1.");
 
-            Console.Write("Enter the path to your game install: ");
-            var gameInstall = Console.ReadLine();
+            var gameInstall = "";
+
+            if (args.Length == 0 || args.ToList().FindIndex(x => x.StartsWith("--path")) == -1) {
+                Console.Write("Enter the path to your game install: ");
+                gameInstall = Console.ReadLine();
+            } else {
+                var index = args.ToList().FindIndex(x => x.StartsWith("--path="));
+                if (index != -1) {
+                    gameInstall = args[index].Replace("--path=", "");
+                } else {
+                    index = args.ToList().FindIndex(x => x == "--path");
+                    gameInstall = args[index + 1].Replace("\"", "");
+                }
+            }
 
             // if gameInstall is the exe, get the directory it's in
             if (File.Exists(gameInstall)) {
@@ -36,71 +49,87 @@ namespace DeezShade {
                     File.Delete(file);
                 }
             }
+            bool useReShade = true;
 
-            var installerUrl =
-                "https://github.com/Mortalitas/GShade/releases/latest/download/GShade.Latest.Installer.exe";
-            var zipUrl = "https://github.com/Mortalitas/GShade/releases/latest/download/GShade.Latest.zip";
-
-            var exePath = tempPath + "GShade.Latest.Installer.exe";
-            var zipPath = tempPath + "GShade.Latest.zip";
-
-            Console.WriteLine("Downloading GShade installer...");
-            using (var client = new WebClient()) {
-                client.DownloadFile(installerUrl, exePath);
-                client.DownloadFile(zipUrl, zipPath);
+            if (args.Length == 0 || args.ToList().FindIndex(x => x == "--reshade") == -1) {
+                Console.Write("Use ReShade (y/n)? ");
+                useReShade = Console.ReadLine().ToLower() == "y";
+            } else {
+                useReShade = args.ToList().FindIndex(x => x == "--reshade") != -1;
             }
 
-            // I'm using the official GShade installer, am I not? :^
-            var assembly = Assembly.LoadFile(exePath);
-            var type = assembly.GetType("GShadeInstaller.App");
+            if (!useReShade) {
+                var installerUrl =
+                                "https://github.com/Mortalitas/GShade/releases/latest/download/GShade.Latest.Installer.exe";
+                var zipUrl = "https://github.com/Mortalitas/GShade/releases/latest/download/GShade.Latest.zip";
 
-            // get presets & shaders
-            type.GetField("_gsTempPath").SetValue(null, tempPath);
-            type.GetField("_exeParentPath").SetValue(null, gameInstall);
+                var exePath = tempPath + "GShade.Latest.Installer.exe";
+                var zipPath = tempPath + "GShade.Latest.zip";
 
-            // Patch GShade from shutting off your computer (LMAO)
-            Console.WriteLine("Patching GShade malware...");
-            type.GetField("_instReady").SetValue(null, true); // wp
-            var harmony = new Harmony("com.notnite.thanks-marot");
-            var lolMethod = type.GetMethod("www", BindingFlags.Static | BindingFlags.NonPublic);
-            harmony.Patch(lolMethod, new HarmonyMethod(typeof(Program).GetMethod(nameof(LolDetour))));
-
-            Console.WriteLine("Requesting new files through GShade installer...");
-            type.GetMethod("CopyZipDeployProcess").Invoke(null, null);
-            type.GetMethod("PresetDownloadProcess").Invoke(null, null);
-            type.GetMethod("PresetInstallProcess").Invoke(null, null);
-
-            // File.Copy gives an access denied error, so let's make it ourself
-            var src = tempPath + "gshade-shaders";
-            var dst = Path.Combine(gameInstall, "gshade-shaders");
-
-            void RecursiveClone(string path) {
-                var path2 = Path.Combine(src, path);
-
-                foreach (var file in Directory.GetFiles(path2)) {
-                    var fileName = Path.GetFileName(file);
-
-                    var srcFile = Path.Combine(path2, fileName);
-                    var dstFile = Path.Combine(dst, path, fileName);
-                    File.Copy(srcFile, dstFile, true);
+                Console.WriteLine("Downloading GShade installer...");
+                using (var client = new WebClient()) {
+                    client.DownloadFile(installerUrl, exePath);
+                    client.DownloadFile(zipUrl, zipPath);
                 }
 
-                foreach (var dir in Directory.GetDirectories(path2)) {
-                    var dirName = Path.GetFileName(dir);
-                    var lol = Path.Combine(dst, path, dirName);
-                    Directory.CreateDirectory(lol);
-                    RecursiveClone(Path.Combine(path, dirName));
+                // I'm using the official GShade installer, am I not? :^
+                var assembly = Assembly.LoadFile(exePath);
+                var type = assembly.GetType("GShadeInstaller.App");
+
+                // get presets & shaders
+                type.GetField("_gsTempPath").SetValue(null, tempPath);
+                type.GetField("_exeParentPath").SetValue(null, gameInstall);
+
+                // Patch GShade from shutting off your computer (LMAO)
+                Console.WriteLine("Patching GShade malware...");
+                type.GetField("_instReady").SetValue(null, true); // wp
+                var harmony = new Harmony("com.notnite.thanks-marot");
+                var lolMethod = type.GetMethod("www", BindingFlags.Static | BindingFlags.NonPublic);
+                harmony.Patch(lolMethod, new HarmonyMethod(typeof(Program).GetMethod(nameof(LolDetour))));
+
+                Console.WriteLine("Requesting new files through GShade installer...");
+                type.GetMethod("CopyZipDeployProcess").Invoke(null, null);
+                type.GetMethod("PresetDownloadProcess").Invoke(null, null);
+                type.GetMethod("PresetInstallProcess").Invoke(null, null);
+
+                // File.Copy gives an access denied error, so let's make it ourself
+                var src = tempPath + "gshade-shaders";
+                var dst = Path.Combine(gameInstall, "gshade-shaders");
+
+                void RecursiveClone(string path) {
+                    var path2 = Path.Combine(src, path);
+
+                    foreach (var file in Directory.GetFiles(path2)) {
+                        var fileName = Path.GetFileName(file);
+
+                        var srcFile = Path.Combine(path2, fileName);
+                        var dstFile = Path.Combine(dst, path, fileName);
+                        File.Copy(srcFile, dstFile, true);
+                    }
+
+                    foreach (var dir in Directory.GetDirectories(path2)) {
+                        var dirName = Path.GetFileName(dir);
+                        var lol = Path.Combine(dst, path, dirName);
+                        Directory.CreateDirectory(lol);
+                        RecursiveClone(Path.Combine(path, dirName));
+                    }
                 }
-            }
 
-            Console.WriteLine("Moving shaders to game directory...");
-            RecursiveClone("");
-            Directory.CreateDirectory(Path.Combine(gameInstall, "gshade-addons"));
+                Console.WriteLine("Moving shaders to game directory...");
+                RecursiveClone("");
+                Directory.CreateDirectory(Path.Combine(gameInstall, "gshade-addons"));
 
-            Console.Write("Use ReShade (y/n)? ");
-            var useReShade = Console.ReadLine().ToLower() == "y";
+                Console.WriteLine("Extracting DLL and config...");
+                var zip = ZipFile.OpenRead(zipPath);
 
-            if (useReShade) {
+                if (File.Exists(Path.Combine(gameInstall, "dxgi.dll"))) {
+                    File.Move(Path.Combine(gameInstall, "dxgi.dll"), Path.Combine(gameInstall, "dxgi.dll.old"));
+                }
+
+                zip.GetEntry("GShade64.dll").ExtractToFile(Path.Combine(gameInstall, "dxgi.dll"), true);
+                zip.GetEntry("GShade.ini").ExtractToFile(Path.Combine(gameInstall, "GShade.ini"), true);
+
+            } else {
                 Console.WriteLine("Downloading ReShade...");
                 var reshadeUrl = "http://static.reshade.me/downloads/ReShade_Setup_5.6.0_Addon.exe";
                 var reshadePath = tempPath + "ReShade_Setup_5.6.0_Addon.exe";
@@ -131,16 +160,6 @@ TextureSearchPaths=.\gshade-shaders\Textures\**
 
                     File.WriteAllText(configPath, configText);
                 }
-            } else {
-                Console.WriteLine("Extracting DLL and config...");
-                var zip = ZipFile.OpenRead(zipPath);
-
-                if (File.Exists(Path.Combine(gameInstall, "dxgi.dll"))) {
-                    File.Move(Path.Combine(gameInstall, "dxgi.dll"), Path.Combine(gameInstall, "dxgi.dll.old"));
-                }
-
-                zip.GetEntry("GShade64.dll").ExtractToFile(Path.Combine(gameInstall, "dxgi.dll"), true);
-                zip.GetEntry("GShade.ini").ExtractToFile(Path.Combine(gameInstall, "GShade.ini"), true);
             }
 
             Console.WriteLine("Done!\nSupport FOSS, and thank you for using DeezShade!\nPress any key to continue.");
