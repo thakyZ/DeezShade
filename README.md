@@ -4,9 +4,9 @@
 
 Okay, now it's just funny. With love from NotNet and friends.
 
-DeezShade is a continuation of [GeezShade](https://git.n2.pm/NotNite/geezshade), in C#.
+DeezShade is a continuation of [GeezShade](https://git.n2.pm/NotNite/geezshade), in C#. It allows you to download GShade shaders and presets while using them with ReShade.
 
-**This is currently broken right now as Marot was banned from GitHub. Consider following [this guide](https://gist.github.com/ry00001/3e2e63b986cb0c673645ea42ffafcc26) or [temporarily patch out updates](https://notnite.com/gshade-patcher.html).**
+Warning: This might break or be dangerous, and I don't always have time to fix it. Marot can and has done arbitrary things through DeezShade like performing a PC shutdown. Consider following [this guide](https://gist.github.com/ry00001/3e2e63b986cb0c673645ea42ffafcc26) for manual installation steps.
 
 [CLICK HERE TO INSTALL IT.](https://git.n2.pm/NotNite/DeezShade/releases/latest)
 
